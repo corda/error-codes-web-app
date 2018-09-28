@@ -1,7 +1,31 @@
 rootProject.name = 'error-codes-server'
 
+include 'commons-di'
+project(':commons-di').projectDir = file('./commons/di')
+
+include 'commons-events'
+project(':commons-events').projectDir = file('./commons/events')
+
+include 'commons-identity'
+project(':commons-identity').projectDir = file('./commons/identity')
+
+include 'commons-lifecycle'
+project(':commons-lifecycle').projectDir = file('./commons/lifecycle')
+
+include 'commons-logging'
+project(':commons-logging').projectDir = file('./commons/logging')
+
+include 'commons-reactive'
+project(':commons-reactive').projectDir = file('./commons/reactive')
+
 include ':commons-test'
 project(':commons-test').projectDir = file('./commons/test')
 
-include 'commons-domain-identity'
-project(':commons-domain-identity').projectDir = file('./commons/domain/identity')
+include 'commons-validation'
+project(':commons-validation').projectDir = file('./commons/validation')
+
+include 'commons-vertx-web'
+project(':commons-vertx-web').projectDir = file('./commons/vertx-web')
+
+include 'commons-web'
+project(':commons-web').projectDir = file('./commons/web')

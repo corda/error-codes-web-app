@@ -1,13 +1,15 @@
-val versions: Map<String, String> by project.parent?.extra!!
-
 dependencies {
     "org.junit.jupiter".let {
-        val version = versions["junit"]
-        compile(group = it, name = "junit-jupiter-api", version = version)
-        compile(group = it, name = "junit-jupiter-engine", version = version)
+
+        val junit_version: String by extra
+
+        compile(group = it, name = "junit-jupiter-api", version = junit_version)
+        compile(group = it, name = "junit-jupiter-engine", version = junit_version)
     }
     "org.assertj".let {
-        val version = versions["assertj"]
-        compile(group = it, name = "assertj-core", version = version)
+
+        val assertj_version: String by extra
+
+        compile(group = it, name = "assertj-core", version = assertj_version)
     }
 }

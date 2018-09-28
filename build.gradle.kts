@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
+// TODO remove "tools" from the package structure.
 buildscript {
-
     extra["spring_boot_version"] = "2.0.5.RELEASE"
     extra["vertx_version"] = "3.5.3"
     extra["javax_annotation_api_version"] = "1.3.2"

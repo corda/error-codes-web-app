@@ -4,10 +4,8 @@ dependencies {
 
         val vertx_version: String by extra
 
-        compile(group = it, name = "vertx-web", version = vertx_version)
+        compile(group = it, name = "vertx-core", version = vertx_version)
     }
-
-    compile(project(":commons-vertx"))
 
     testCompile(project(":commons-test"))
 }

@@ -3,6 +3,9 @@ rootProject.name = 'error-codes-server'
 include 'commons-di'
 project(':commons-di').projectDir = file('./commons/di')
 
+include 'commons-domain'
+project(':commons-domain').projectDir = file('./commons/domain')
+
 include 'commons-events'
 project(':commons-events').projectDir = file('./commons/events')
 
@@ -24,8 +27,8 @@ project(':commons-test').projectDir = file('./commons/test')
 include 'commons-validation'
 project(':commons-validation').projectDir = file('./commons/validation')
 
+include 'commons-vertx'
+project(':commons-vertx').projectDir = file('./commons/vertx')
+
 include 'commons-vertx-web'
 project(':commons-vertx-web').projectDir = file('./commons/vertx-web')
-
-include 'commons-web'
-project(':commons-web').projectDir = file('./commons/web')

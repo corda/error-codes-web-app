@@ -1,5 +1,6 @@
 rootProject.name = 'error-codes-server'
 
+include 'application'
 include 'domain'
 
 include 'commons-di'
@@ -20,8 +21,17 @@ project(':commons-lifecycle').projectDir = file('./commons/lifecycle')
 include 'commons-logging'
 project(':commons-logging').projectDir = file('./commons/logging')
 
+include 'commons-logging-log4j2'
+project(':commons-logging-log4j2').projectDir = file('./commons/logging-log4j2')
+
 include 'commons-reactive'
 project(':commons-reactive').projectDir = file('./commons/reactive')
+
+include ':commons-spring-boot'
+project(':commons-spring-boot').projectDir = file('./commons/spring-boot')
+
+include ':commons-spring-boot-test'
+project(':commons-spring-boot-test').projectDir = file('./commons/spring-boot-test')
 
 include ':commons-test'
 project(':commons-test').projectDir = file('./commons/test')

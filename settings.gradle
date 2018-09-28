@@ -2,6 +2,10 @@ rootProject.name = 'error-codes-server'
 
 include 'application'
 include 'domain'
+include 'properties-based-error-descriptions-repository'
+
+include 'commons-configuration'
+project(':commons-configuration').projectDir = file('./commons/configuration')
 
 include 'commons-di'
 project(':commons-di').projectDir = file('./commons/di')

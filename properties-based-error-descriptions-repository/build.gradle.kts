@@ -1,12 +1,5 @@
 dependencies {
 
-    "com.github.ben-manes.caffeine".let {
-
-        val caffeine_version: String by extra
-
-        compile(group = it, name = "caffeine", version = caffeine_version)
-    }
-
     compile(project(":domain"))
 
     compile(project(":commons-configuration"))

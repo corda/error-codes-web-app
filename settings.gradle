@@ -3,5 +3,5 @@ rootProject.name = 'error-codes-server'
 include ':commons-test'
 project(':commons-test').projectDir = file('./commons/test')
 
-include 'commons-identity'
-project(':commons-identity').projectDir = file('./commons/identity')
+include 'commons-domain-identity'
+project(':commons-domain-identity').projectDir = file('./commons/domain/identity')

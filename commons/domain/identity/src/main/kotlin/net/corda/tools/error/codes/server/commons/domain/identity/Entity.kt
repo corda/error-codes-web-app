@@ -1,4 +1,4 @@
-package net.corda.tools.error.codes.server.commons.identity
+package net.corda.tools.error.codes.server.commons.domain.identity
 
 import org.apache.commons.lang3.builder.ToStringBuilder
 import org.apache.commons.lang3.builder.ToStringStyle

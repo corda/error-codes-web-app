@@ -7,6 +7,7 @@ buildscript {
     extra["javax_annotation_api_version"] = "1.3.2"
     extra["javax_inject_version"] = "1"
     extra["project_reactor_version"] = "3.2.0.RELEASE"
+    extra["slf4j_version"] = "1.7.25"
     extra["konf_version"] = "0.11"
     extra["juud_version"] = "3.1.5"
     extra["apache_commons_version"] = "3.8"

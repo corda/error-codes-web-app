@@ -2,7 +2,7 @@
 
 workspace.xml
 
-.gradle/
+.gradle
 
 **/build/*
 **/out/*

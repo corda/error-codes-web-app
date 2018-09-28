@@ -1,4 +1,4 @@
-package net.corda.tools.error.codes.server.commons.validation
+package net.corda.tools.error.codes.server.commons.domain
 
 interface ValidationResult<TARGET : Any> {
 

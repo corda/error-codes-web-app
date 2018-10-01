@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 // TODO remove "tools" from the package structure.
 buildscript {
     extra["spring_boot_version"] = "2.0.5.RELEASE"
+    extra["spring_version"] = "5.1.0.RELEASE"
     extra["vertx_version"] = "3.5.3"
     extra["javax_annotation_api_version"] = "1.3.2"
     extra["javax_inject_version"] = "1"
@@ -14,7 +15,6 @@ buildscript {
     extra["caffeine_version"] = "2.6.2"
     extra["junit_version"] = "5.3.1"
     extra["assertj_version"] = "3.11.1"
-    extra["spring_test_junit5_version"] = "1.2.0"
 }
 
 plugins {

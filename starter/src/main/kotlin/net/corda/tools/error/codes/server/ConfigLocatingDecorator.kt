@@ -1,10 +1,10 @@
-package net.corda.tools.error.codes.server.web
+package net.corda.tools.error.codes.server
 
 import com.uchuhimo.konf.Config
 import javax.inject.Named
 
 @Named
-internal class ConfigsDecorator : (Config) -> Config {
+internal class ConfigLocatingDecorator : (Config) -> Config {
 
     private companion object {
 

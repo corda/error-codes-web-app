@@ -21,7 +21,6 @@ import java.net.InetSocketAddress
 import java.net.ServerSocket
 import javax.inject.Inject
 
-// TODO add another test class that starts the entire thing as a test, to check that everything is wired up correctly.
 @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
 @ExtendWith(SpringExtension::class)
 @SpringBootTest(classes = [ErrorCodesWebAppContractTest.Configuration::class])

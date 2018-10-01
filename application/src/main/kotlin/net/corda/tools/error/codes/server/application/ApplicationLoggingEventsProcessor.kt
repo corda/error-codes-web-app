@@ -1,9 +1,7 @@
-package net.corda.tools.error.codes.server
+package net.corda.tools.error.codes.server.application
 
-import net.corda.tools.error.codes.server.application.ErrorDescriptionService
 import net.corda.tools.error.codes.server.commons.events.EventStream
 import net.corda.tools.error.codes.server.domain.loggerFor
-import net.corda.tools.error.codes.server.web.WebServer
 import reactor.core.publisher.ofType
 import reactor.core.scheduler.Schedulers
 import java.time.LocalDateTime
@@ -12,23 +10,17 @@ import javax.inject.Inject
 import javax.inject.Named
 
 @Named
-internal class LoggingEventsProcessors @Inject internal constructor(stream: EventStream) {
+internal class ApplicationLoggingEventsProcessor @Inject internal constructor(stream: EventStream) {
 
     private companion object {
 
-        private val logger = loggerFor<LoggingEventsProcessors>()
+        private val logger = loggerFor<ApplicationLoggingEventsProcessor>()
     }
 
     init {
         with(stream.events.publishOn(Schedulers.elastic())) {
-            ofType<WebServer.Event.Initialisation.Completed>().doOnNext(::logWebServerInitialisation).subscribe()
             ofType<ErrorDescriptionService.Event.Invocation.Completed.DescriptionLocationFor.WithoutDescriptionLocation>().doOnNext(::warnAboutUnmappedErrorCode).subscribe()
         }
-    }
-
-    private fun logWebServerInitialisation(event: WebServer.Event.Initialisation.Completed) {
-
-        logger.info("Web server started listening on port '${event.port.value}' at ${LocalDateTime.ofInstant(event.createdAt, ZoneId.systemDefault())}. Event ID is '${event.id.value}'.")
     }
 
     private fun warnAboutUnmappedErrorCode(event: ErrorDescriptionService.Event.Invocation.Completed.DescriptionLocationFor.WithoutDescriptionLocation) {

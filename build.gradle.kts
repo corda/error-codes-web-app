@@ -1,7 +1,10 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 buildscript {
-    extra["spring_boot_version"] = "2.0.5.RELEASE"
+
+    val spring_boot_version = "2.0.5.RELEASE"
+
+    extra["spring_boot_version"] = spring_boot_version
     extra["spring_version"] = "5.1.0.RELEASE"
     extra["vertx_version"] = "3.5.3"
     extra["javax_annotation_api_version"] = "1.3.2"
@@ -14,6 +17,10 @@ buildscript {
     extra["caffeine_version"] = "2.6.2"
     extra["junit_version"] = "5.3.1"
     extra["assertj_version"] = "3.11.1"
+
+    dependencies {
+        classpath(group = "org.springframework.boot", name = "spring-boot-gradle-plugin", version = spring_boot_version)
+    }
 }
 
 plugins {

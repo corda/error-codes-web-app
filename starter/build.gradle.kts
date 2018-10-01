@@ -1,3 +1,7 @@
+apply {
+    plugin("io.spring.dependency-management")
+}
+
 dependencies {
 
     "org.springframework.boot".let {

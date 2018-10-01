@@ -5,6 +5,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import reactor.core.publisher.Flux
 import java.io.File
+import java.io.InputStream
 import java.net.URI
 import java.nio.file.Files
 import java.util.*
@@ -47,7 +48,7 @@ internal class PropertiesFileLoaderTest {
 
         return PropertiesFileLoader(object : PropertiesFileLoader.Configuration {
 
-            override val propertiesFile = file
+            override fun openProperties(): InputStream = file.inputStream()
         })
     }
 

@@ -48,3 +48,6 @@ project(':commons-vertx').projectDir = file('./commons/vertx')
 
 include 'commons-vertx-web'
 project(':commons-vertx-web').projectDir = file('./commons/vertx-web')
+
+include 'commons-vertx-web-test'
+project(':commons-vertx-web-test').projectDir = file('./commons/vertx-web-test')

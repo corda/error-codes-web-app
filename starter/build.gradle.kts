@@ -26,13 +26,7 @@ dependencies {
     compile(project(":commons-logging"))
     runtime(project(":commons-logging-log4j2"))
 
-    "io.vertx".let {
-
-        val vertx_version: String by extra
-
-        testCompile(group = it, name = "vertx-web-client", version = vertx_version)
-    }
-
     testCompile(project(":commons-test"))
     testCompile(project(":commons-spring-boot-test"))
+    testCompile(project(":commons-vertx-web-test"))
 }

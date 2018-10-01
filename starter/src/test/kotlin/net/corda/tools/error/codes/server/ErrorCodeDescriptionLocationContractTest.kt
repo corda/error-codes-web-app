@@ -8,6 +8,7 @@ import io.vertx.ext.web.client.HttpResponse
 import io.vertx.ext.web.client.WebClient
 import io.vertx.ext.web.client.WebClientOptions
 import net.corda.tools.error.codes.server.commons.domain.Port
+import net.corda.tools.error.codes.server.commons.vertx.web.test.asyncResponse
 import net.corda.tools.error.codes.server.domain.*
 import net.corda.tools.error.codes.server.domain.annotations.Adapter
 import net.corda.tools.error.codes.server.test.annotations.TestBean
@@ -26,7 +27,6 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Flux.empty
 import reactor.core.publisher.Flux.just
 import reactor.core.publisher.Mono
-import reactor.core.publisher.MonoProcessor
 import java.net.InetSocketAddress
 import java.net.ServerSocket
 import java.net.URI
@@ -80,19 +80,7 @@ internal class ErrorCodeDescriptionLocationContractTest {
         val vertx = Vertx.vertx()
         val client = webServer.client(vertx)
 
-        val promise = MonoProcessor.create<HttpResponse<Buffer>>()
-
-        client.get(path(errorCoordinatesForServer)).followRedirects(false).send { call ->
-
-            if (call.succeeded()) {
-                promise.onNext(call.result())
-            } else {
-                promise.onError(call.cause())
-            }
-            client.close()
-            vertx.close()
-        }
-        return promise
+        return client.get(path(errorCoordinatesForServer)).followRedirects(false).asyncResponse().doAfterTerminate(client::close).doAfterTerminate(vertx::close)
     }
 
     // This should stay hard-coded, rather than read from the actual configuration, to avoid breaking the contract without breaking the test.

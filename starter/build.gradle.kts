@@ -13,6 +13,7 @@ dependencies {
     compile(project(":webserver"))
     compile(project(":application"))
     compile(project(":domain"))
+    runtime(project(":properties-based-error-descriptions-repository"))
 
     compile(project(":commons-vertx"))
     compile(project(":commons-vertx-web"))

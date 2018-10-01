@@ -4,6 +4,7 @@ import com.uchuhimo.konf.Config
 import com.uchuhimo.konf.ConfigSpec
 import net.corda.tools.error.codes.server.domain.annotations.Adapter
 import net.corda.tools.error.codes.server.domain.loggerFor
+import org.springframework.core.io.ResourceLoader
 import java.io.InputStream
 import java.util.*
 import javax.inject.Inject
@@ -36,7 +37,7 @@ internal class LoadedProperties @Inject constructor(private val loader: Properti
 
 @Adapter
 @Named
-internal class PropertiesFileLoaderConfiguration @Inject constructor(applyConfigStandards: (Config) -> Config) : PropertiesFileLoader.Configuration {
+internal class PropertiesFileLoaderConfiguration @Inject constructor(applyConfigStandards: (Config) -> Config, private val resourceLoader: ResourceLoader) : PropertiesFileLoader.Configuration {
 
     private companion object {
 
@@ -55,7 +56,10 @@ internal class PropertiesFileLoaderConfiguration @Inject constructor(applyConfig
 
     override fun openProperties(): InputStream {
 
-        return (resourceFromFile() ?: bundledResource()).let { ClassLoader.getSystemClassLoader().getResourceAsStream(it) }
+        return (resourceFromFile() ?: bundledResource()).let {
+
+            resourceLoader.getResource(it).inputStream
+        }
     }
 
     private fun resourceFromFile(): String? = config[Spec.properties_file_path]?.also { logger.info("Loading error code locations from path \"$it\"") }

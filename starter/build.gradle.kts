@@ -1,5 +1,8 @@
+import org.gradle.api.tasks.bundling.Jar
+import org.springframework.boot.gradle.tasks.bundling.BootJar
+
 apply {
-    plugin("io.spring.dependency-management")
+    plugin("org.springframework.boot")
 }
 
 dependencies {
@@ -32,3 +35,12 @@ dependencies {
     testCompile(project(":commons-spring-boot-test"))
     testCompile(project(":commons-vertx-web-test"))
 }
+
+val jar: Jar by tasks
+val bootJar: BootJar by tasks
+
+jar.enabled = true
+
+bootJar.enabled = true
+bootJar.baseName = "error-codes-server-starter"
+bootJar.archiveName = "${bootJar.baseName}.${bootJar.extension}"

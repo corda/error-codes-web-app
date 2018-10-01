@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 buildscript {
 
     val spring_boot_version = "2.0.5.RELEASE"
+    val palantir_gradle_docker_plugin_version = "0.20.1"
 
     extra["spring_boot_version"] = spring_boot_version
     extra["spring_version"] = "5.1.0.RELEASE"
@@ -20,6 +21,7 @@ buildscript {
 
     dependencies {
         classpath(group = "org.springframework.boot", name = "spring-boot-gradle-plugin", version = spring_boot_version)
+        classpath(group = "com.palantir.gradle.docker", name = "gradle-docker", version = palantir_gradle_docker_plugin_version)
     }
 }
 

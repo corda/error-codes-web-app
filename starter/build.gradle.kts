@@ -1,8 +1,10 @@
+import com.palantir.gradle.docker.DockerExtension
 import org.gradle.api.tasks.bundling.Jar
 import org.springframework.boot.gradle.tasks.bundling.BootJar
 
 apply {
     plugin("org.springframework.boot")
+    plugin("com.palantir.docker")
 }
 
 dependencies {
@@ -44,3 +46,12 @@ jar.enabled = true
 bootJar.enabled = true
 bootJar.baseName = "error-codes-server-starter"
 bootJar.archiveName = "${bootJar.baseName}.${bootJar.extension}"
+
+configure<DockerExtension> {
+
+    dependsOn(jar)
+    name = "${project.group}/${bootJar.baseName}"
+    setDockerfile(file("$rootDir/docker/Dockerfile"))
+    files(bootJar.archivePath)
+    buildArgs(mapOf("JAR_FILE" to bootJar.archiveName))
+}

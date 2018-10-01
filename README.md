@@ -18,3 +18,7 @@ Configuration can be partially overridden by:
 ## How to build
 
 Run `./gradlew clean build`, which will test the application and produce an executable JAR at `./starter/build/libs/error-codes-server-starter.jar`.
+
+### Docker
+
+Running `./graddlew clean build docker` will test, build and create a Docker image out of the application. After that, the container can be run with exposed port e.g., `docker run -p=8085:8080 net.corda.tools.error-codes-server/error-codes-server-starter`.

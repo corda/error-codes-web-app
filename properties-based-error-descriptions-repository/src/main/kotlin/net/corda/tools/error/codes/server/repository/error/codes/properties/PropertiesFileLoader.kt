@@ -55,13 +55,10 @@ internal class PropertiesFileLoaderConfiguration @Inject constructor(applyConfig
 
     override fun openProperties(): InputStream {
 
-        // TODO refactor here
-        return (config[Spec.properties_file_path]?.let {
-            logger.info("Loading error code locations from path \"$it\"")
-            it
-        } ?: config[Spec.properties_file_resource_name].let {
-            logger.info("Loading error code locations from resource \"$it\"")
-            it
-        }).let { ClassLoader.getSystemClassLoader().getResourceAsStream(it) }
+        return (resourceFromFile() ?: bundledResource()).let { ClassLoader.getSystemClassLoader().getResourceAsStream(it) }
     }
+
+    private fun resourceFromFile(): String? = config[Spec.properties_file_path]?.also { logger.info("Loading error code locations from path \"$it\"") }
+
+    private fun bundledResource(): String = config[Spec.properties_file_resource_name].also { logger.info("Loading error code locations from resource \"$it\"") }
 }

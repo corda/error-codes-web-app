@@ -22,11 +22,11 @@ internal class ConfigLocatingDecorator : (Config) -> Config {
         private val rootConfig = Config { addSpec(Spec) }.from().env().from().systemProperties()
     }
 
-    override fun invoke(config: Config): Config = (configPath() ?: ::fromResource).invoke(config).from.env().from.systemProperties()
+    override fun invoke(config: Config): Config = fromExternalFile().invoke(fromResource(config)).from.env().from.systemProperties()
 
-    private fun configPath(): ((Config) -> Config)? {
+    private fun fromExternalFile(): (Config) -> Config {
 
-        return rootConfig[Spec.path]?.let { { config: Config -> config.from.yaml.file(Paths.get(it).toAbsolutePath().toFile()) } }
+        return rootConfig[Spec.path]?.let { { config: Config -> config.from.yaml.file(Paths.get(it).toAbsolutePath().toFile()) } } ?: { config -> config }
     }
 
     private fun fromResource(config: Config): Config = config.from.yaml.resource(CONFIGURATION_FILE_RESOURCE_NAME)

@@ -8,15 +8,11 @@ dependencies {
         compile(group = it, name = "spring-boot-autoconfigure", version = spring_boot_version)
     }
 
-//    TODO trim the build.gradle.kts files, changing from compile to runtime, etc.
-    // TODO make webserver a runtime dependency
     compile(project(":webserver"))
     compile(project(":application"))
     compile(project(":domain"))
     runtime(project(":properties-based-error-descriptions-repository"))
 
-    compile(project(":commons-vertx"))
-    compile(project(":commons-vertx-web"))
     compile(project(":commons-configuration"))
     compile(project(":commons-di"))
     compile(project(":commons-domain"))

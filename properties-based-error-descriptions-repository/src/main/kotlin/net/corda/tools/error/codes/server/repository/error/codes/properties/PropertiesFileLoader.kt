@@ -35,6 +35,7 @@ internal class LoadedProperties @Inject constructor(private val loader: Properti
     override fun invoke() = loader.load()
 }
 
+// TODO sollecitom replace ResourceLoader with a closure `loadResource(resourceName: String): InputStream` and provide an implementation in another managed bean.
 @Adapter
 @Named
 internal class PropertiesFileLoaderConfiguration @Inject constructor(applyConfigStandards: (Config) -> Config, private val resourceLoader: ResourceLoader) : PropertiesFileLoader.Configuration {

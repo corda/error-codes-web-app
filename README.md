@@ -21,4 +21,4 @@ Run `./gradlew clean build`, which will test the application and produce an exec
 
 ### Docker
 
-Running `./graddlew clean build docker` will test, build and create a Docker image out of the application. After that, the container can be run with exposed port e.g., `docker run -p=8085:8080 net.corda.tools.error-codes-server/error-codes-server-starter`.
+Running `./gradlew clean build docker` will test, build and create a Docker image out of the application. After that, the container can be run with exposed port e.g., `docker run -p=8085:8080 net.corda.tools.error-codes-server/error-codes-server-starter`.

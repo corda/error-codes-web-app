@@ -55,7 +55,7 @@ bootJar.archiveName = "${bootJar.baseName}.${bootJar.extension}"
 
 configure<DockerExtension> {
 
-    dependsOn(jar)
+    dependsOn(bootJar)
     name = "${project.group}/${bootJar.baseName}"
     setDockerfile(file("$rootDir/docker/Dockerfile"))
     files(bootJar.archivePath)

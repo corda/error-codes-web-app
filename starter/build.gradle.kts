@@ -53,11 +53,18 @@ bootJar.enabled = true
 bootJar.baseName = "error-codes-server-starter"
 bootJar.archiveName = "${bootJar.baseName}.${bootJar.extension}"
 
+val unpack = task("unpack", Copy::class) {
+
+    dependsOn += bootJar
+    from(zipTree(bootJar.outputs.files.singleFile))
+    into("build/dependency")
+}
+
 configure<DockerExtension> {
 
-    dependsOn(bootJar)
+    dependsOn(unpack)
     name = "${project.group}/${bootJar.baseName}"
     setDockerfile(file("$rootDir/docker/Dockerfile"))
-    files(bootJar.archivePath)
-    buildArgs(mapOf("JAR_FILE" to bootJar.archiveName))
+    copySpec.from(unpack.outputs).into("dependency")
+    buildArgs(mapOf("DEPENDENCY" to "dependency"))
 }

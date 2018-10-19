@@ -59,5 +59,5 @@ configure<DockerExtension> {
     name = "${project.group}/${bootJar.baseName}"
     setDockerfile(file("$rootDir/docker/Dockerfile"))
     files(bootJar.archivePath)
-    buildArgs(mapOf("JAR_FILE" to bootJar.archiveName))
+    buildArgs(mapOf("JAR_FILE" to bootJar.archivePath.name))
 }

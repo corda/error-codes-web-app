@@ -60,4 +60,5 @@ configure<DockerExtension> {
     setDockerfile(file("$rootDir/docker/Dockerfile"))
     files(bootJar.archivePath)
     buildArgs(mapOf("JAR_FILE" to bootJar.archivePath.name))
+    pull(true)
 }

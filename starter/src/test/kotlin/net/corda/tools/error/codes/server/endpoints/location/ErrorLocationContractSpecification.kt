@@ -1,4 +1,4 @@
-package net.corda.tools.error.codes.server
+package net.corda.tools.error.codes.server.endpoints.location
 
 import io.netty.handler.codec.http.HttpHeaderNames
 import io.netty.handler.codec.http.HttpResponseStatus
@@ -15,7 +15,10 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import java.net.URI
 
-interface ErrorCodesWebAppContractSpecification {
+interface ErrorLocationContractSpecification {
+
+    // This should stay hard-coded, rather than read from the actual configuration, to avoid breaking the contract without breaking the test.
+    fun path(coordinates: ErrorCoordinates): String
 
     @Test
     fun found_location_is_returned_as_temporary_redirect() {
@@ -53,9 +56,6 @@ interface ErrorCodesWebAppContractSpecification {
 
         return client.get(path(errorCoordinatesForServer)).followRedirects(false).asyncResponse().doAfterTerminate(client::close).doAfterTerminate(vertx::close)
     }
-
-    // This should stay hard-coded, rather than read from the actual configuration, to avoid breaking the contract without breaking the test.
-    private fun path(coordinates: ErrorCoordinates): String = "/editions/${coordinates.platformEdition.description}/releases/${coordinates.releaseVersion.description()}/errors/${coordinates.code.value}"
 
     private fun webClient(port: Int, vertx: Vertx): WebClient = WebClient.create(vertx, WebClientOptions().setDefaultHost("localhost").setDefaultPort(port))
 }

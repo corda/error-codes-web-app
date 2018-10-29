@@ -1,5 +1,6 @@
-package net.corda.tools.error.codes.server
+package net.corda.tools.error.codes.server.endpoints.location
 
+import net.corda.tools.error.codes.server.ErrorCodesWebAppStarter
 import net.corda.tools.error.codes.server.commons.domain.Port
 import net.corda.tools.error.codes.server.domain.ErrorCode
 import net.corda.tools.error.codes.server.domain.ErrorCoordinates
@@ -23,8 +24,8 @@ import javax.inject.Inject
 
 @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
 @ExtendWith(SpringExtension::class)
-@SpringBootTest(classes = [ErrorCodesWebAppContractTest.Configuration::class])
-internal class ErrorCodesWebAppContractTest : ErrorCodesWebAppContractSpecification {
+@SpringBootTest(classes = [ErrorLocationContractTestTemplate.Configuration::class])
+internal abstract class ErrorLocationContractTestTemplate : ErrorLocationContractSpecification {
 
     @Inject
     private lateinit var webServer: WebServer

@@ -16,7 +16,7 @@ internal class HealthCheckEndpoint @Inject constructor(configuration: HealthChec
 
         // Here we could use a function to find out whether the application is healthy or not. If not, provide a message to explain why not.
         // The function would get injected with all the managed components implementing an `HealthCheckable` interface.
-        serve(router.get(path)) { response().setStatusCode(HttpResponseStatus.OK.code()).end("Healthy as a trout!") }
+        serve(router.get(path)) { response().setStatusCode(HttpResponseStatus.OK.code()).end("Healthy as a trout !") }
     }
 
     interface Configuration : ConfigurableEndpoint.Configuration

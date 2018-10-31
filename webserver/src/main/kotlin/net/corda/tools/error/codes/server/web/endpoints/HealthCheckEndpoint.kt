@@ -15,7 +15,7 @@ import javax.inject.Named
 @Named
 internal class HealthCheckEndpoint @Inject constructor(configuration: HealthCheckEndpoint.Configuration) : ConfigurableEndpoint(configuration, setOf(HttpMethod.GET)) {
 
-    private val answer = JsonObject().put("message", "Healthy as a trout!").put("revision_id", configuration.revisionId.value)
+    private val answer = JsonObject().put("message", "Healthy as a trout!").put("revision_id", configuration.revisionId.value).put("source_url", "https://github.com/corda/error-codes-web-app/tree/${configuration.revisionId.value}")
 
     override fun install(router: Router) {
 

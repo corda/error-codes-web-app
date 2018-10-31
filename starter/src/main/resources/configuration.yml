@@ -1,4 +1,7 @@
 configuration:
+  metadata:
+    revision:
+      id: unknown
   web:
     server:
       port: 8080

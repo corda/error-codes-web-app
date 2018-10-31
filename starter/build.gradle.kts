@@ -44,6 +44,8 @@ dependencies {
     testCompile(project(":commons-vertx-web-test"))
 }
 
+val revisionId = project.properties["revision_id"] as? String ?: "unknown"
+
 val jar: Jar by tasks
 val bootJar: BootJar by tasks
 
@@ -59,6 +61,6 @@ configure<DockerExtension> {
     name = "${project.group}/${bootJar.baseName}"
     setDockerfile(file("$rootDir/docker/Dockerfile"))
     files(bootJar.archivePath)
-    buildArgs(mapOf("JAR_FILE" to bootJar.archivePath.name, "USER_GROUP" to "corda", "USER_NAME" to "corda"))
+    buildArgs(mapOf("JAR_FILE" to bootJar.archivePath.name, "USER_GROUP" to "corda", "USER_NAME" to "corda", "REVISION_ID" to revisionId))
     pull(true)
 }

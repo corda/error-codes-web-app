@@ -25,6 +25,6 @@ internal class LoggingEventsProcessor @Inject internal constructor(stream: Event
 
     private fun logWebServerInitialisation(event: WebServer.Event.Initialisation.Completed) {
 
-        logger.info("Web server started listening on port '${event.port.value}' at ${LocalDateTime.ofInstant(event.createdAt, ZoneId.systemDefault())}. Event ID is '${event.id.value}'.")
+        logger.info("Web server started listening on port '${event.port.value}', at ${LocalDateTime.ofInstant(event.createdAt, ZoneId.systemDefault())}. Event ID is '${event.id.value}'.")
     }
 }

@@ -48,7 +48,7 @@ internal class PropertiesErrorDescriptionsRepository @Inject constructor(@Adapte
         val parts = rawValue.split(DESCRIPTION_PARTS_SEPARATOR)
         val location = ErrorDescriptionLocation.External(URI.create(parts[0]))
         val platformEdition = parts[1].let { if (it == "OS") PlatformEdition.OpenSource else PlatformEdition.Enterprise }
-        val releaseVersion = parts[2].split(ReleaseVersion.SEPARATOR).map(String::toInt).let { releaseNumbers -> ReleaseVersion(releaseNumbers[0], releaseNumbers[1], releaseNumbers[2]) }
+        val releaseVersion = parts[2].split(ReleaseVersion.SEPARATOR).map(String::toInt).let { releaseNumbers -> ReleaseVersion(releaseNumbers[0], releaseNumbers[1], releaseNumbers.getOrNull(2) ?: 0) }
         val coordinates = ErrorCoordinates(errorCode, releaseVersion, platformEdition)
         return ErrorDescription(location, coordinates)
     }

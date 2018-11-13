@@ -1,13 +1,7 @@
 package net.corda.tools.error.codes.server.repository.error.codes.properties
 
 import net.corda.tools.error.codes.server.commons.lifecycle.Startable
-import net.corda.tools.error.codes.server.domain.ErrorCode
-import net.corda.tools.error.codes.server.domain.ErrorCoordinates
-import net.corda.tools.error.codes.server.domain.ErrorDescription
-import net.corda.tools.error.codes.server.domain.ErrorDescriptionLocation
-import net.corda.tools.error.codes.server.domain.InvocationContext
-import net.corda.tools.error.codes.server.domain.PlatformEdition
-import net.corda.tools.error.codes.server.domain.ReleaseVersion
+import net.corda.tools.error.codes.server.domain.*
 import net.corda.tools.error.codes.server.domain.annotations.Adapter
 import net.corda.tools.error.codes.server.domain.repository.descriptions.ErrorDescriptionsRepository
 import reactor.core.publisher.Flux
@@ -29,17 +23,17 @@ internal class PropertiesErrorDescriptionsRepository @Inject constructor(@Adapte
         private const val DESCRIPTION_PARTS_SEPARATOR = ","
     }
 
-    private var properties = Properties()
+    private var map = mapOf<ErrorCode, List<ErrorDescription>>()
 
     @PostConstruct
     override fun start() {
 
-        properties = loadProperties.invoke()
+        map = loadProperties.invoke().entries.map { entry -> ErrorCode(entry.key as String) to (entry.value as String).split(DESCRIPTIONS_SEPARATOR).filter(String::isNotBlank).map { parseDescription(it, ErrorCode(entry.key as String)) } }.toMap()
     }
 
     override operator fun get(errorCode: ErrorCode, invocationContext: InvocationContext): Flux<out ErrorDescription> {
 
-        return properties.getProperty(errorCode.value)?.split(DESCRIPTIONS_SEPARATOR)?.toFlux()?.filter(String::isNotBlank)?.map { parseDescription(it, errorCode) } ?: empty()
+        return map[errorCode]?.toFlux() ?: empty()
     }
 
     private fun parseDescription(rawValue: String, errorCode: ErrorCode): ErrorDescription {

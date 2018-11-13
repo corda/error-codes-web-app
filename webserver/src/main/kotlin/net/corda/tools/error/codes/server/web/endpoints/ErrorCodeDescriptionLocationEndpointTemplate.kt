@@ -68,6 +68,11 @@ internal fun releaseVersion(rawValue: String): ValidationResult<ReleaseVersion> 
         rawParts.size < 2 || rawParts.size > 3 -> INVALID_VERSION
         rawParts.any { it.second != "SNAPSHOT" && it.second != null } -> INVALID_VERSION
         rawParts[0].second != null -> INVALID_VERSION
+        rawParts.size == 2 && rawParts[1].second == null -> try {
+            valid(ReleaseVersion(rawParts[0].first.toInt(), rawParts[1].first.toInt()))
+        } catch (e: Exception) {
+            INVALID_VERSION
+        }
         rawParts[1].second != null -> if (rawParts.size == 3) {
             INVALID_VERSION
         } else {

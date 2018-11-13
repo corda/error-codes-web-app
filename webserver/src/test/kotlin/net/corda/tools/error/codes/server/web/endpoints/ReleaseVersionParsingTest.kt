@@ -23,6 +23,21 @@ class ReleaseVersionParsingTest {
     }
 
     @Test
+    fun major_minor() {
+        val major = 4
+        val minor = 3
+        val expected = ReleaseVersion(major, minor)
+
+        // Do not derive this, otherwise a change in the domain will change the test.
+        val raw = "$major.$minor"
+
+        val actual = releaseVersion(raw)
+
+        assertThat(actual.isValid)
+        assertThat(actual.validValue()).isEqualTo(expected)
+    }
+
+    @Test
     fun major_minor_patch_snapshot() {
         val major = 4
         val minor = 3

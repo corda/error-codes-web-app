@@ -29,7 +29,9 @@ interface ErrorDescriptionService : EventPublisher<ErrorDescriptionService.Event
 
             sealed class Completed(invocationContext: InvocationContext, id: EventId = EventId.newInstance()) : ErrorDescriptionService.Event.Invocation(invocationContext, id) {
 
-                sealed class DescriptionLocationFor(val errorCoordinates: ErrorCoordinates, val location: ErrorDescriptionLocation?, invocationContext: InvocationContext, id: EventId = EventId.newInstance()) : ErrorDescriptionService.Event.Invocation.Completed(invocationContext, id) {
+                sealed class DescriptionLocationFor(val errorCoordinates: ErrorCoordinates, open val location: ErrorDescriptionLocation?, invocationContext: InvocationContext, id: EventId = EventId.newInstance()) : ErrorDescriptionService.Event.Invocation.Completed(invocationContext, id) {
+
+                    class WithDescriptionLocation(errorCoordinates: ErrorCoordinates, override val location: ErrorDescriptionLocation, invocationContext: InvocationContext, id: EventId = EventId.newInstance()) : ErrorDescriptionService.Event.Invocation.Completed.DescriptionLocationFor(errorCoordinates, location, invocationContext, id)
 
                     class WithoutDescriptionLocation(errorCoordinates: ErrorCoordinates, invocationContext: InvocationContext, id: EventId = EventId.newInstance()) : ErrorDescriptionService.Event.Invocation.Completed.DescriptionLocationFor(errorCoordinates, null, invocationContext, id)
 
@@ -40,7 +42,7 @@ interface ErrorDescriptionService : EventPublisher<ErrorDescriptionService.Event
                         toString["releaseVersion"] = errorCoordinates.releaseVersion.description()
                         toString["platformEdition"] = errorCoordinates.platformEdition.description
                         toString["location"] = when (location) {
-                            is ErrorDescriptionLocation.External -> location.uri
+                            is ErrorDescriptionLocation.External -> (location as ErrorDescriptionLocation.External).uri
                             null -> "<null>"
                         }
                     }

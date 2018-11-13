@@ -81,7 +81,10 @@ internal class CachingErrorDescriptionService @Inject constructor(@Adapter priva
 
     private fun completed(location: ErrorDescriptionLocation?, coordinates: ErrorCoordinates, invocationContext: InvocationContext): ErrorDescriptionService.Event.Invocation.Completed.DescriptionLocationFor? {
 
-        return if (location == null) ErrorDescriptionService.Event.Invocation.Completed.DescriptionLocationFor.WithoutDescriptionLocation(coordinates, invocationContext) else null
+        return when {
+            location != null -> ErrorDescriptionService.Event.Invocation.Completed.DescriptionLocationFor.WithDescriptionLocation(coordinates, location, invocationContext)
+            else -> ErrorDescriptionService.Event.Invocation.Completed.DescriptionLocationFor.WithoutDescriptionLocation(coordinates, invocationContext)
+        }
     }
 
     @Named(eventSourceQualifier)

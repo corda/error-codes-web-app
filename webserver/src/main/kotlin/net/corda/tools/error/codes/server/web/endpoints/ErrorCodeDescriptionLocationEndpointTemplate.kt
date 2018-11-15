@@ -29,7 +29,8 @@ internal abstract class ErrorCodeDescriptionLocationEndpointTemplate(configurati
                 withPathParam(RELEASE_VERSION, ::releaseVersion) { releaseVersion ->
                     withPathParam(ERROR_CODE, ErrorCode.Valid::create) { errorCode ->
 
-                        locateDescription(errorCode, releaseVersion, platformEdition, context).thenIfPresent(this) { location -> response().end(location) }
+                        locateDescription(errorCode, releaseVersion, platformEdition, context)
+                                .thenIfPresent(this) { location -> response().end(location) }
                     }
                 }
             }

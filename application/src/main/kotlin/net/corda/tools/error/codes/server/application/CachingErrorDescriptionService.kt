@@ -11,6 +11,7 @@ import net.corda.tools.error.codes.server.domain.PlatformEdition
 import net.corda.tools.error.codes.server.domain.ReleaseVersion
 import net.corda.tools.error.codes.server.domain.annotations.Adapter
 import net.corda.tools.error.codes.server.domain.loggerFor
+import org.springframework.core.Ordered
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.publisher.Mono.defer
@@ -20,18 +21,28 @@ import javax.inject.Named
 
 @Application
 @Named
-internal class CachingErrorDescriptionService @Inject constructor(@Adapter private val lookup: (ErrorCode, InvocationContext) -> Flux<out ErrorDescription>, private val retrieveCached: (ErrorCoordinates) -> Mono<ErrorDescriptionLocation>, private val addToCache: (ErrorCoordinates, ErrorDescriptionLocation) -> Mono<Unit>, @Named(CachingErrorDescriptionService.eventSourceQualifier) override val source: PublishingEventSource<ErrorDescriptionService.Event> = CachingErrorDescriptionService.EventSourceBean()) : ErrorDescriptionService {
+internal class CachingErrorDescriptionService @Inject constructor(
+        @Adapter private val lookup: (ErrorCode, InvocationContext) -> Flux<out ErrorDescription>,
+        private val retrieveCached: (ErrorCoordinates) -> Mono<ErrorDescriptionLocation>,
+        private val addToCache: (ErrorCoordinates, ErrorDescriptionLocation) -> Mono<Unit>,
+        @Named(CachingErrorDescriptionService.eventSourceQualifier) override val source: PublishingEventSource<ErrorDescriptionService.Event> = CachingErrorDescriptionService.EventSourceBean())
+    : ErrorDescriptionService, Ordered {
 
-    private companion object {
-
+    companion object {
         private const val eventSourceQualifier = "CachingErrorDescriptionService_PublishingEventSource"
         private val logger = loggerFor<CachingErrorDescriptionService>()
     }
 
+    override fun getOrder(): Int = Ordered.HIGHEST_PRECEDENCE
+
     override fun descriptionLocationFor(errorCode: ErrorCode, releaseVersion: ReleaseVersion, platformEdition: PlatformEdition, invocationContext: InvocationContext): Mono<ErrorDescriptionLocation> {
 
+        logger.info("Evaluate from db")
+
         val coordinates = ErrorCoordinates(errorCode, releaseVersion, platformEdition)
-        return coordinates.let(retrieveCached).orIfAbsent { lookupClosestTo(coordinates, invocationContext).doOnNext { addToCache(coordinates, it) } }.thenPublish(coordinates, invocationContext)
+        return coordinates.let(retrieveCached)
+                .orIfAbsent { lookupClosestTo(coordinates, invocationContext).doOnNext { addToCache(coordinates, it) } }
+                .thenPublish(coordinates, invocationContext)
     }
 
     @PreDestroy
@@ -50,8 +61,10 @@ internal class CachingErrorDescriptionService @Inject constructor(@Adapter priva
 
         return Comparator { first, second ->
 
-            val firstDistance: ReleaseVersion = first?.coordinates?.releaseVersion?.distanceFrom(releaseVersion) ?: ReleaseVersion(Int.MAX_VALUE, Int.MAX_VALUE, Int.MAX_VALUE)
-            val secondDistance: ReleaseVersion = second?.coordinates?.releaseVersion?.distanceFrom(releaseVersion) ?: ReleaseVersion(Int.MAX_VALUE, Int.MAX_VALUE, Int.MAX_VALUE)
+            val firstDistance: ReleaseVersion = first?.coordinates?.releaseVersion?.distanceFrom(releaseVersion)
+                    ?: ReleaseVersion(Int.MAX_VALUE, Int.MAX_VALUE, Int.MAX_VALUE)
+            val secondDistance: ReleaseVersion = second?.coordinates?.releaseVersion?.distanceFrom(releaseVersion)
+                    ?: ReleaseVersion(Int.MAX_VALUE, Int.MAX_VALUE, Int.MAX_VALUE)
             firstDistance.compareTo(secondDistance)
         }
     }
@@ -91,10 +104,3 @@ internal class CachingErrorDescriptionService @Inject constructor(@Adapter priva
     private class EventSourceBean : PublishingEventSource<ErrorDescriptionService.Event>()
 }
 
-// This allows injecting functions instead of types.
-@Application
-@Named
-internal class ErrorDescriptionLocator @Inject constructor(private val service: ErrorDescriptionService) : (ErrorCode, ReleaseVersion, PlatformEdition, InvocationContext) -> Mono<ErrorDescriptionLocation> {
-
-    override fun invoke(errorCode: ErrorCode, releaseVersion: ReleaseVersion, platformEdition: PlatformEdition, invocationContext: InvocationContext) = service.descriptionLocationFor(errorCode, releaseVersion, platformEdition, invocationContext)
-}

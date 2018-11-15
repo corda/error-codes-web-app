@@ -7,13 +7,6 @@ dependencies {
         compile(group = it, name = "caffeine", version = caffeine_version)
     }
 
-    "org.springframework".let {
-
-        val spring_version: String by extra
-
-        compile(group = it, name = "spring-core", version = spring_version)
-    }
-
     compile(project(":domain"))
 
     compile(project(":commons-configuration"))

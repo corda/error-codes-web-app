@@ -11,7 +11,6 @@ import net.corda.tools.error.codes.server.domain.PlatformEdition
 import net.corda.tools.error.codes.server.domain.ReleaseVersion
 import net.corda.tools.error.codes.server.domain.annotations.Adapter
 import net.corda.tools.error.codes.server.domain.loggerFor
-import org.springframework.core.Ordered
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.publisher.Mono.defer
@@ -27,14 +26,12 @@ internal class CachingErrorDescriptionService @Inject constructor(
         private val retrieveCached: (ErrorCoordinates) -> Mono<ErrorDescriptionLocation>,
         private val addToCache: (ErrorCoordinates, ErrorDescriptionLocation) -> Mono<Unit>,
         @Named(CachingErrorDescriptionService.eventSourceQualifier) override val source: PublishingEventSource<ErrorDescriptionService.Event> = CachingErrorDescriptionService.EventSourceBean())
-    : ErrorDescriptionService, Ordered {
+    : ErrorDescriptionService {
 
     private companion object {
         private const val eventSourceQualifier = "CachingErrorDescriptionService_PublishingEventSource"
         private val logger = loggerFor<CachingErrorDescriptionService>()
     }
-
-    override fun getOrder(): Int = Ordered.HIGHEST_PRECEDENCE
 
     override fun descriptionLocationFor(errorCode: ErrorCode, releaseVersion: ReleaseVersion, platformEdition: PlatformEdition, invocationContext: InvocationContext): Mono<ErrorDescriptionLocation> {
 

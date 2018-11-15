@@ -35,14 +35,30 @@ interface ErrorLocationContractSpecification {
     }
 
     @Test
-    fun absent_location_results_in_not_found() {
+    fun absent_os_location_results_in_redirection_to_stack_overflow() {
 
-        val errorCoordinates = ErrorCoordinates(ErrorCode("123jdazz"), ReleaseVersion(4, 3, 1), PlatformEdition.Enterprise)
+        val errorCode = "123jdazz"
+        val errorCoordinates = ErrorCoordinates(ErrorCode(errorCode), ReleaseVersion(4, 3, 1), PlatformEdition.OpenSource)
+
+        val expectedLocation = ErrorDescriptionLocation.External(URI.create("https://www.stackoverflow.com/search?q=[corda]+errorCode+$errorCode"))
 
         val response = performRequestWithStubbedValue(errorCoordinates, Flux.empty()).block()!!
 
-        assertThat(response.statusCode()).isEqualTo(HttpResponseStatus.NOT_FOUND.code())
-        assertThat(response.headers()[HttpHeaderNames.LOCATION]).isNull()
+        assertThat(response.statusCode()).isEqualTo(HttpResponseStatus.TEMPORARY_REDIRECT.code())
+        assertThat(response.headers()[HttpHeaderNames.LOCATION]).isEqualTo(expectedLocation.uri.toASCIIString())
+    }
+
+    @Test
+    fun absent_ent_location_results_in_redirection_to_stack_overflow() {
+
+        val errorCoordinates = ErrorCoordinates(ErrorCode("123jdazz"), ReleaseVersion(4, 3, 1), PlatformEdition.Enterprise)
+
+        val expectedLocation = ErrorDescriptionLocation.External(URI.create("https://support.r3.com/"))
+
+        val response = performRequestWithStubbedValue(errorCoordinates, Flux.empty()).block()!!
+
+        assertThat(response.statusCode()).isEqualTo(HttpResponseStatus.TEMPORARY_REDIRECT.code())
+        assertThat(response.headers()[HttpHeaderNames.LOCATION]).isEqualTo(expectedLocation.uri.toASCIIString())
     }
 
     fun startWebServerWithStubbedRepository(errorCoordinatesForServer: ErrorCoordinates, descriptionsReturned: Flux<out ErrorDescription>): Int

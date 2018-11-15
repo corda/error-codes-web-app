@@ -39,23 +39,23 @@ internal class CachingErrorDescriptionService @Inject constructor(
         return coordinates.let(retrieveCached)
                 .orIfAbsent { lookupClosestTo(coordinates, invocationContext).doOnNext { addToCache(coordinates, it) } }
                 .thenPublish(coordinates, invocationContext)
-                .orIfAbsent { provideEnterpriseDefault(coordinates) }
-                .orIfAbsent { provideOSDefault(coordinates) }
+                .orIfAbsent { coordinates.provideEnterpriseDefault() }
+                .orIfAbsent { coordinates.provideOSDefault() }
     }
 
-    private fun provideEnterpriseDefault(coordinates: ErrorCoordinates): Mono<ErrorDescriptionLocation> {
+    private fun ErrorCoordinates.provideEnterpriseDefault(): Mono<ErrorDescriptionLocation> {
 
-        return if (coordinates.platformEdition == PlatformEdition.Enterprise) {
+        return if (this.platformEdition == PlatformEdition.Enterprise) {
             Mono.just(ErrorDescriptionLocation.External(URI("https://support.r3.com/")))
         } else {
             Mono.empty()
         }
     }
 
-    private fun provideOSDefault(coordinates: ErrorCoordinates): Mono<ErrorDescriptionLocation> {
+    private fun ErrorCoordinates.provideOSDefault(): Mono<ErrorDescriptionLocation> {
 
-        return if (coordinates.platformEdition == PlatformEdition.OpenSource) {
-            Mono.just(ErrorDescriptionLocation.External(URI("https://www.stackoverflow.com/search?q=[corda]+errorCode+${coordinates.code.value}")))
+        return if (this.platformEdition == PlatformEdition.OpenSource) {
+            Mono.just(ErrorDescriptionLocation.External(URI("https://www.stackoverflow.com/search?q=[corda]+errorCode+${this.code.value}")))
         } else {
             Mono.empty()
         }

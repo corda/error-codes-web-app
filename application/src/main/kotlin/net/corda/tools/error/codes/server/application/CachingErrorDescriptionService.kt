@@ -15,6 +15,7 @@ import org.springframework.core.Ordered
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.publisher.Mono.defer
+import java.net.URI
 import javax.annotation.PreDestroy
 import javax.inject.Inject
 import javax.inject.Named
@@ -41,6 +42,28 @@ internal class CachingErrorDescriptionService @Inject constructor(
         return coordinates.let(retrieveCached)
                 .orIfAbsent { lookupClosestTo(coordinates, invocationContext).doOnNext { addToCache(coordinates, it) } }
                 .thenPublish(coordinates, invocationContext)
+                .orIfAbsent { provideEnterpriseDefault(coordinates) }
+                .orIfAbsent { provideOSDefault(coordinates) }
+    }
+
+    private fun provideEnterpriseDefault(coordinates: ErrorCoordinates): Mono<ErrorDescriptionLocation> {
+
+        return if (coordinates.platformEdition == PlatformEdition.Enterprise) {
+            logger.info("Enterprise found ${coordinates.code} ${coordinates.platformEdition} ${coordinates.releaseVersion}")
+            Mono.just(ErrorDescriptionLocation.External(URI("https://support.r3.com/")))
+        } else {
+            Mono.empty()
+        }
+    }
+
+    private fun provideOSDefault(coordinates: ErrorCoordinates): Mono<ErrorDescriptionLocation> {
+
+        return if (coordinates.platformEdition == PlatformEdition.OpenSource) {
+            logger.info("OS found ${coordinates.code} ${coordinates.platformEdition} ${coordinates.releaseVersion}")
+            Mono.just(ErrorDescriptionLocation.External(URI("https://www.stackoverflow.com/search?q=[corda]+errorCode+${coordinates.code.value}")))
+        } else {
+            Mono.empty()
+        }
     }
 
     @PreDestroy
@@ -102,3 +125,10 @@ internal class CachingErrorDescriptionService @Inject constructor(
     private class EventSourceBean : PublishingEventSource<ErrorDescriptionService.Event>()
 }
 
+// This allows injecting functions instead of types.
+@Application
+@Named
+internal class ErrorDescriptionLocator @Inject constructor(private val service: ErrorDescriptionService) : (ErrorCode, ReleaseVersion, PlatformEdition, InvocationContext) -> Mono<ErrorDescriptionLocation> {
+
+    override fun invoke(errorCode: ErrorCode, releaseVersion: ReleaseVersion, platformEdition: PlatformEdition, invocationContext: InvocationContext) = service.descriptionLocationFor(errorCode, releaseVersion, platformEdition, invocationContext)
+}

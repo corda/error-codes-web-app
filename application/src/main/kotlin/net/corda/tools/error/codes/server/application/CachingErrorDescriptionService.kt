@@ -37,8 +37,6 @@ internal class CachingErrorDescriptionService @Inject constructor(
 
     override fun descriptionLocationFor(errorCode: ErrorCode, releaseVersion: ReleaseVersion, platformEdition: PlatformEdition, invocationContext: InvocationContext): Mono<ErrorDescriptionLocation> {
 
-        logger.info("Evaluate from db")
-
         val coordinates = ErrorCoordinates(errorCode, releaseVersion, platformEdition)
         return coordinates.let(retrieveCached)
                 .orIfAbsent { lookupClosestTo(coordinates, invocationContext).doOnNext { addToCache(coordinates, it) } }

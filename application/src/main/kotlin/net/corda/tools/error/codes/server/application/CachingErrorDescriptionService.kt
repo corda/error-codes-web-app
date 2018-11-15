@@ -28,7 +28,7 @@ internal class CachingErrorDescriptionService @Inject constructor(
         @Named(CachingErrorDescriptionService.eventSourceQualifier) override val source: PublishingEventSource<ErrorDescriptionService.Event> = CachingErrorDescriptionService.EventSourceBean())
     : ErrorDescriptionService, Ordered {
 
-    companion object {
+    private companion object {
         private const val eventSourceQualifier = "CachingErrorDescriptionService_PublishingEventSource"
         private val logger = loggerFor<CachingErrorDescriptionService>()
     }

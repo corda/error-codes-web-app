@@ -49,7 +49,6 @@ internal class CachingErrorDescriptionService @Inject constructor(
     private fun provideEnterpriseDefault(coordinates: ErrorCoordinates): Mono<ErrorDescriptionLocation> {
 
         return if (coordinates.platformEdition == PlatformEdition.Enterprise) {
-            logger.info("Enterprise found ${coordinates.code} ${coordinates.platformEdition} ${coordinates.releaseVersion}")
             Mono.just(ErrorDescriptionLocation.External(URI("https://support.r3.com/")))
         } else {
             Mono.empty()
@@ -59,7 +58,6 @@ internal class CachingErrorDescriptionService @Inject constructor(
     private fun provideOSDefault(coordinates: ErrorCoordinates): Mono<ErrorDescriptionLocation> {
 
         return if (coordinates.platformEdition == PlatformEdition.OpenSource) {
-            logger.info("OS found ${coordinates.code} ${coordinates.platformEdition} ${coordinates.releaseVersion}")
             Mono.just(ErrorDescriptionLocation.External(URI("https://www.stackoverflow.com/search?q=[corda]+errorCode+${coordinates.code.value}")))
         } else {
             Mono.empty()

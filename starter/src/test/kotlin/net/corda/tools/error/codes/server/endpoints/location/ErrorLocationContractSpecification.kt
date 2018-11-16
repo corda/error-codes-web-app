@@ -49,7 +49,7 @@ interface ErrorLocationContractSpecification {
     }
 
     @Test
-    fun absent_ent_location_results_in_redirection_to_stack_overflow() {
+    fun absent_ent_location_results_in_redirection_to_support_portal() {
 
         val errorCoordinates = ErrorCoordinates(ErrorCode("123jdazz"), ReleaseVersion(4, 3, 1), PlatformEdition.Enterprise)
 

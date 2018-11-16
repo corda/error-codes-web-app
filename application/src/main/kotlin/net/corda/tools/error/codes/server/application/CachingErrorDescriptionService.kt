@@ -7,7 +7,6 @@ import net.corda.tools.error.codes.server.domain.annotations.Adapter
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.publisher.Mono.defer
-import java.net.URI
 import javax.annotation.PreDestroy
 import javax.inject.Inject
 import javax.inject.Named
@@ -16,20 +15,22 @@ import javax.inject.Named
 @Named
 internal class CachingErrorDescriptionService @Inject constructor(
         @Adapter private val lookup: (ErrorCode, InvocationContext) -> Flux<out ErrorDescription>,
-        private val retrieveCached: (ErrorCoordinates) -> Mono<ErrorDescriptionLocation>,
+        @Named(CachingErrorDescriptionService.retrieveCachedQualifier) private val retrieveCached: (ErrorCoordinates) -> Mono<ErrorDescriptionLocation>,
         private val addToCache: (ErrorCoordinates, ErrorDescriptionLocation) -> Mono<Unit>,
-        @Named(CachingErrorDescriptionService.eventSourceQualifier) override val source: PublishingEventSource<ErrorDescriptionService.Event> = CachingErrorDescriptionService.EventSourceBean())
-    : ErrorDescriptionService {
+        @Named(CachingErrorDescriptionService.redirectToSearchUrlQualifier) private val redirectToSearchUrl: (ErrorCoordinates) -> Mono<ErrorDescriptionLocation>,
+        @Named(CachingErrorDescriptionService.eventSourceQualifier) override val source: PublishingEventSource<ErrorDescriptionService.Event> = CachingErrorDescriptionService.EventSourceBean()) : ErrorDescriptionService {
 
-    private companion object {
+    internal companion object {
         private const val eventSourceQualifier = "CachingErrorDescriptionService_PublishingEventSource"
+        internal const val retrieveCachedQualifier = "CachingErrorDescriptionService_RetrieveCached"
+        internal const val redirectToSearchUrlQualifier = "CachingErrorDescriptionService_RedirectToSearchUrl"
         private val logger = loggerFor<CachingErrorDescriptionService>()
     }
 
     override fun descriptionLocationFor(errorCode: ErrorCode, releaseVersion: ReleaseVersion, platformEdition: PlatformEdition, invocationContext: InvocationContext): Mono<ErrorDescriptionLocation> {
 
         val coordinates = ErrorCoordinates(errorCode, releaseVersion, platformEdition)
-        return coordinates.let(retrieveCached).orIfAbsent { lookupClosestTo(coordinates, invocationContext).doOnNext { addToCache(coordinates, it) } }.thenPublish(coordinates, invocationContext).orIfAbsent(coordinates::bestEffortSearchLocation)
+        return coordinates.let(retrieveCached).orIfAbsent { lookupClosestTo(coordinates, invocationContext).doOnNext { addToCache(coordinates, it) } }.thenPublish(coordinates, invocationContext).orIfAbsent { redirectToSearchUrl(coordinates) }
     }
 
     @PreDestroy
@@ -97,12 +98,4 @@ internal class CachingErrorDescriptionService @Inject constructor(
 internal class ErrorDescriptionLocator @Inject constructor(private val service: ErrorDescriptionService) : (ErrorCode, ReleaseVersion, PlatformEdition, InvocationContext) -> Mono<ErrorDescriptionLocation> {
 
     override fun invoke(errorCode: ErrorCode, releaseVersion: ReleaseVersion, platformEdition: PlatformEdition, invocationContext: InvocationContext) = service.descriptionLocationFor(errorCode, releaseVersion, platformEdition, invocationContext)
-}
-
-private fun ErrorCoordinates.bestEffortSearchLocation(): Mono<ErrorDescriptionLocation> {
-
-    return when (platformEdition) {
-        PlatformEdition.Enterprise -> Mono.just(ErrorDescriptionLocation.External(URI("https://support.r3.com/")))
-        PlatformEdition.OpenSource -> Mono.just(ErrorDescriptionLocation.External(URI("https://www.stackoverflow.com/search?q=[corda]+errorCode+${code.value}")))
-    }
 }

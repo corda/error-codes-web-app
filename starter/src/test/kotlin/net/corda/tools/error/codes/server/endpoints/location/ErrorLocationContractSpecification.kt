@@ -53,7 +53,7 @@ interface ErrorLocationContractSpecification {
 
         val errorCoordinates = ErrorCoordinates(ErrorCode("123jdazz"), ReleaseVersion(4, 3, 1), PlatformEdition.Enterprise)
 
-        val expectedLocation = ErrorDescriptionLocation.External(URI.create("https://support.r3.com/"))
+        val expectedLocation = ErrorDescriptionLocation.External(URI.create("https://support.r3.com"))
 
         val response = performRequestWithStubbedValue(errorCoordinates, Flux.empty()).block()!!
 

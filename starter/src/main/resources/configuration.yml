@@ -20,6 +20,12 @@ configuration:
           enabled: true
   application:
     service:
+      messages:
+        templates:
+          lookup:
+            miss:
+              open_source: https://www.stackoverflow.com/search?q=[corda]+errorCode+%s
+              enterprise: https://support.r3.com
       cache:
         max_size: 1000
   adapters:

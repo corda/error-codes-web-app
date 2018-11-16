@@ -12,6 +12,7 @@ import reactor.core.publisher.Mono.empty
 import reactor.core.publisher.Mono.justOrEmpty
 import javax.inject.Inject
 import javax.inject.Named
+import javax.inject.Qualifier
 
 @Application
 @Named
@@ -48,7 +49,7 @@ internal class UnboundInMemoryErrorLocationCache @Inject constructor(configurati
 
 // This allows injecting functions instead of types.
 @Application
-@Named
+@Named(CachingErrorDescriptionService.retrieveCachedQualifier)
 internal class GetCachedErrorCode @Inject constructor(private val cache: UnboundInMemoryErrorLocationCache) : (ErrorCoordinates) -> Mono<ErrorDescriptionLocation> {
 
     override fun invoke(errorCoordinates: ErrorCoordinates) = cache[errorCoordinates]

@@ -18,6 +18,7 @@ import java.net.URI
 
 internal class CachingErrorDescriptionServiceTest {
 
+    @Suppress("RedundantLambdaArrow")
     @Nested
     internal inner class DescriptionLocationFor {
 
@@ -32,8 +33,9 @@ internal class CachingErrorDescriptionServiceTest {
             val retrieveCached = { coordinates: ErrorCoordinates -> Mono.just(location()).also { assertThat(coordinates).isEqualTo(errorCoordinates) } }
             val lookup = { _: ErrorCode, _: InvocationContext -> descriptions.also { lookupCalled = true } }
             val addToCache = { _: ErrorCoordinates, _: ErrorDescriptionLocation -> empty<Unit>() }
+            val redirectOnAMiss = { _ : ErrorCoordinates -> Mono.just(ErrorDescriptionLocation.External(URI("https://google.co.uk")) as ErrorDescriptionLocation) }
 
-            val service = CachingErrorDescriptionService(lookup, retrieveCached, addToCache)
+            val service = CachingErrorDescriptionService(lookup, retrieveCached, addToCache, redirectOnAMiss)
 
             service.use { it.descriptionLocationFor(errorCoordinates, invocationContext).block() }
 
@@ -51,8 +53,9 @@ internal class CachingErrorDescriptionServiceTest {
             val retrieveCached = { _: ErrorCoordinates -> empty<ErrorDescriptionLocation>() }
             val lookup = { code: ErrorCode, _: InvocationContext -> descriptions.also { lookupCalled = true }.also { assertThat(code).isEqualTo(errorCoordinates.code) } }
             val addToCache = { _: ErrorCoordinates, _: ErrorDescriptionLocation -> empty<Unit>() }
+            val redirectOnAMiss = { _ : ErrorCoordinates -> Mono.just(ErrorDescriptionLocation.External(URI("https://google.co.uk")) as ErrorDescriptionLocation) }
 
-            val service = CachingErrorDescriptionService(lookup, retrieveCached, addToCache)
+            val service = CachingErrorDescriptionService(lookup, retrieveCached, addToCache, redirectOnAMiss)
 
             service.use { it.descriptionLocationFor(errorCoordinates, invocationContext).block() }
 
@@ -74,12 +77,39 @@ internal class CachingErrorDescriptionServiceTest {
 
             val lookup = { _: ErrorCode, _: InvocationContext -> descriptions }
             val addToCache = { coordinates: ErrorCoordinates, location: ErrorDescriptionLocation -> empty<Unit>().also { addToCacheCalled = true }.also { assertThat(coordinates).isEqualTo(errorCoordinates) }.also { assertThat(location).isEqualTo(lookedUpDescription?.location) } }
+            val redirectOnAMiss = { _ : ErrorCoordinates -> Mono.just(ErrorDescriptionLocation.External(URI("https://google.co.uk")) as ErrorDescriptionLocation) }
 
-            val service = CachingErrorDescriptionService(lookup, retrieveCached, addToCache)
+            val service = CachingErrorDescriptionService(lookup, retrieveCached, addToCache, redirectOnAMiss)
 
             service.use { it.descriptionLocationFor(errorCoordinates, invocationContext).block() }
 
             assertThat(addToCacheCalled).isTrue()
+        }
+
+        @Test
+        fun mapped_description_produces_event() {
+
+            val errorCoordinates = ErrorCoordinates(ErrorCode("1jwqa"), ReleaseVersion(4, 3, 1), PlatformEdition.OpenSource)
+            val invocationContext = InvocationContext.newInstance()
+            val description = description()
+            val descriptions: Flux<out ErrorDescription> = Flux.just(description)
+
+            val retrieveCached = { _: ErrorCoordinates -> empty<ErrorDescriptionLocation>() }
+            val lookup = { _: ErrorCode, _: InvocationContext -> descriptions }
+            val addToCache = { _: ErrorCoordinates, _: ErrorDescriptionLocation -> empty<Unit>() }
+            val redirectOnAMiss = { _ : ErrorCoordinates -> Mono.just(ErrorDescriptionLocation.External(URI("https://google.co.uk")) as ErrorDescriptionLocation) }
+
+            val service = CachingErrorDescriptionService(lookup, retrieveCached, addToCache, redirectOnAMiss)
+
+            // Here `single()` transforms a Flux in a Mono, failing if there are 0 or more than 1 events.
+            service.events.ofType<ErrorDescriptionService.Event.Invocation.Completed.DescriptionLocationFor.WithDescriptionLocation>().single().doOnNext { event ->
+
+                assertThat(event.errorCoordinates).isEqualTo(errorCoordinates)
+                assertThat(event.invocationContext).isEqualTo(invocationContext)
+                assertThat(event.location).isEqualTo(description.location)
+            }.subscribe()
+
+            service.use { it.descriptionLocationFor(errorCoordinates, invocationContext).block() }
         }
 
         @Test
@@ -92,8 +122,9 @@ internal class CachingErrorDescriptionServiceTest {
             val retrieveCached = { _: ErrorCoordinates -> empty<ErrorDescriptionLocation>() }
             val lookup = { _: ErrorCode, _: InvocationContext -> descriptions }
             val addToCache = { _: ErrorCoordinates, _: ErrorDescriptionLocation -> empty<Unit>() }
+            val redirectOnAMiss = { _ : ErrorCoordinates -> Mono.just(ErrorDescriptionLocation.External(URI("https://google.co.uk")) as ErrorDescriptionLocation) }
 
-            val service = CachingErrorDescriptionService(lookup, retrieveCached, addToCache)
+            val service = CachingErrorDescriptionService(lookup, retrieveCached, addToCache, redirectOnAMiss)
 
             // Here `single()` transforms a Flux in a Mono, failing if there are 0 or more than 1 events.
             service.events.ofType<ErrorDescriptionService.Event.Invocation.Completed.DescriptionLocationFor.WithoutDescriptionLocation>().single().doOnNext { event ->
@@ -104,6 +135,25 @@ internal class CachingErrorDescriptionServiceTest {
             }.subscribe()
 
             service.use { it.descriptionLocationFor(errorCoordinates, invocationContext).block() }
+        }
+
+        @Test
+        fun unmapped_description_produces_fallback_location() {
+
+            val errorCoordinates = ErrorCoordinates(ErrorCode("1jwqa"), ReleaseVersion(4, 3, 1), PlatformEdition.OpenSource)
+            val invocationContext = InvocationContext.newInstance()
+            val descriptions: Flux<out ErrorDescription> = Flux.empty()
+            val fallbackLocation: ErrorDescriptionLocation = ErrorDescriptionLocation.External(URI("https://google.co.uk"))
+
+            val retrieveCached = { _: ErrorCoordinates -> empty<ErrorDescriptionLocation>() }
+            val lookup = { _: ErrorCode, _: InvocationContext -> descriptions }
+            val addToCache = { _: ErrorCoordinates, _: ErrorDescriptionLocation -> empty<Unit>() }
+            val redirectOnAMiss = { _ : ErrorCoordinates -> Mono.just(fallbackLocation) }
+
+            val service = CachingErrorDescriptionService(lookup, retrieveCached, addToCache, redirectOnAMiss)
+
+            val errorDescriptionLocation = service.use { it.descriptionLocationFor(errorCoordinates, invocationContext).block() }
+            assertThat(errorDescriptionLocation).isEqualTo(fallbackLocation)
         }
 
         @Test
@@ -124,8 +174,9 @@ internal class CachingErrorDescriptionServiceTest {
             val retrieveCached = { coordinates: ErrorCoordinates -> Mono.empty<ErrorDescriptionLocation>().also { assertThat(coordinates).isEqualTo(errorCoordinates) } }
             val lookup = { _: ErrorCode, _: InvocationContext -> descriptions }
             val addToCache = { _: ErrorCoordinates, _: ErrorDescriptionLocation -> empty<Unit>() }
+            val redirectOnAMiss = { _ : ErrorCoordinates -> Mono.just(ErrorDescriptionLocation.External(URI("https://google.co.uk")) as ErrorDescriptionLocation) }
 
-            val service = CachingErrorDescriptionService(lookup, retrieveCached, addToCache)
+            val service = CachingErrorDescriptionService(lookup, retrieveCached, addToCache, redirectOnAMiss)
 
             val errorDescriptionLocation = service.use { it.descriptionLocationFor(errorCoordinates, invocationContext).block() }
 
@@ -155,8 +206,9 @@ internal class CachingErrorDescriptionServiceTest {
             val retrieveCached = { coordinates: ErrorCoordinates -> Mono.empty<ErrorDescriptionLocation>().also { assertThat(coordinates).isEqualTo(errorCoordinates) } }
             val lookup = { _: ErrorCode, _: InvocationContext -> descriptions }
             val addToCache = { _: ErrorCoordinates, _: ErrorDescriptionLocation -> empty<Unit>() }
+            val redirectOnAMiss = { _ : ErrorCoordinates -> Mono.just(ErrorDescriptionLocation.External(URI("https://google.co.uk")) as ErrorDescriptionLocation) }
 
-            val service = CachingErrorDescriptionService(lookup, retrieveCached, addToCache)
+            val service = CachingErrorDescriptionService(lookup, retrieveCached, addToCache, redirectOnAMiss)
 
             val errorDescriptionLocation = service.use { it.descriptionLocationFor(errorCoordinates, invocationContext).block() }
 

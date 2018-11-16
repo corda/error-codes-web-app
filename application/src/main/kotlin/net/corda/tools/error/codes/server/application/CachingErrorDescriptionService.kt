@@ -14,16 +14,21 @@ import net.corda.tools.error.codes.server.domain.loggerFor
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.publisher.Mono.defer
+import java.net.URI
 import javax.annotation.PreDestroy
 import javax.inject.Inject
 import javax.inject.Named
 
 @Application
 @Named
-internal class CachingErrorDescriptionService @Inject constructor(@Adapter private val lookup: (ErrorCode, InvocationContext) -> Flux<out ErrorDescription>, private val retrieveCached: (ErrorCoordinates) -> Mono<ErrorDescriptionLocation>, private val addToCache: (ErrorCoordinates, ErrorDescriptionLocation) -> Mono<Unit>, @Named(CachingErrorDescriptionService.eventSourceQualifier) override val source: PublishingEventSource<ErrorDescriptionService.Event> = CachingErrorDescriptionService.EventSourceBean()) : ErrorDescriptionService {
+internal class CachingErrorDescriptionService @Inject constructor(
+        @Adapter private val lookup: (ErrorCode, InvocationContext) -> Flux<out ErrorDescription>,
+        private val retrieveCached: (ErrorCoordinates) -> Mono<ErrorDescriptionLocation>,
+        private val addToCache: (ErrorCoordinates, ErrorDescriptionLocation) -> Mono<Unit>,
+        @Named(CachingErrorDescriptionService.eventSourceQualifier) override val source: PublishingEventSource<ErrorDescriptionService.Event> = CachingErrorDescriptionService.EventSourceBean())
+    : ErrorDescriptionService {
 
     private companion object {
-
         private const val eventSourceQualifier = "CachingErrorDescriptionService_PublishingEventSource"
         private val logger = loggerFor<CachingErrorDescriptionService>()
     }
@@ -31,7 +36,29 @@ internal class CachingErrorDescriptionService @Inject constructor(@Adapter priva
     override fun descriptionLocationFor(errorCode: ErrorCode, releaseVersion: ReleaseVersion, platformEdition: PlatformEdition, invocationContext: InvocationContext): Mono<ErrorDescriptionLocation> {
 
         val coordinates = ErrorCoordinates(errorCode, releaseVersion, platformEdition)
-        return coordinates.let(retrieveCached).orIfAbsent { lookupClosestTo(coordinates, invocationContext).doOnNext { addToCache(coordinates, it) } }.thenPublish(coordinates, invocationContext)
+        return coordinates.let(retrieveCached)
+                .orIfAbsent { lookupClosestTo(coordinates, invocationContext).doOnNext { addToCache(coordinates, it) } }
+                .thenPublish(coordinates, invocationContext)
+                .orIfAbsent { coordinates.provideEnterpriseDefault() }
+                .orIfAbsent { coordinates.provideOSDefault() }
+    }
+
+    private fun ErrorCoordinates.provideEnterpriseDefault(): Mono<ErrorDescriptionLocation> {
+
+        return if (this.platformEdition == PlatformEdition.Enterprise) {
+            Mono.just(ErrorDescriptionLocation.External(URI("https://support.r3.com/")))
+        } else {
+            Mono.empty()
+        }
+    }
+
+    private fun ErrorCoordinates.provideOSDefault(): Mono<ErrorDescriptionLocation> {
+
+        return if (this.platformEdition == PlatformEdition.OpenSource) {
+            Mono.just(ErrorDescriptionLocation.External(URI("https://www.stackoverflow.com/search?q=[corda]+errorCode+${this.code.value}")))
+        } else {
+            Mono.empty()
+        }
     }
 
     @PreDestroy
@@ -50,8 +77,10 @@ internal class CachingErrorDescriptionService @Inject constructor(@Adapter priva
 
         return Comparator { first, second ->
 
-            val firstDistance: ReleaseVersion = first?.coordinates?.releaseVersion?.distanceFrom(releaseVersion) ?: ReleaseVersion(Int.MAX_VALUE, Int.MAX_VALUE, Int.MAX_VALUE)
-            val secondDistance: ReleaseVersion = second?.coordinates?.releaseVersion?.distanceFrom(releaseVersion) ?: ReleaseVersion(Int.MAX_VALUE, Int.MAX_VALUE, Int.MAX_VALUE)
+            val firstDistance: ReleaseVersion = first?.coordinates?.releaseVersion?.distanceFrom(releaseVersion)
+                    ?: ReleaseVersion(Int.MAX_VALUE, Int.MAX_VALUE, Int.MAX_VALUE)
+            val secondDistance: ReleaseVersion = second?.coordinates?.releaseVersion?.distanceFrom(releaseVersion)
+                    ?: ReleaseVersion(Int.MAX_VALUE, Int.MAX_VALUE, Int.MAX_VALUE)
             firstDistance.compareTo(secondDistance)
         }
     }

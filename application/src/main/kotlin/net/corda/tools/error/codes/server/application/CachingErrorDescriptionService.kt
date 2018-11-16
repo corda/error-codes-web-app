@@ -2,15 +2,8 @@ package net.corda.tools.error.codes.server.application
 
 import net.corda.tools.error.codes.server.application.annotations.Application
 import net.corda.tools.error.codes.server.commons.events.PublishingEventSource
-import net.corda.tools.error.codes.server.domain.ErrorCode
-import net.corda.tools.error.codes.server.domain.ErrorCoordinates
-import net.corda.tools.error.codes.server.domain.ErrorDescription
-import net.corda.tools.error.codes.server.domain.ErrorDescriptionLocation
-import net.corda.tools.error.codes.server.domain.InvocationContext
-import net.corda.tools.error.codes.server.domain.PlatformEdition
-import net.corda.tools.error.codes.server.domain.ReleaseVersion
+import net.corda.tools.error.codes.server.domain.*
 import net.corda.tools.error.codes.server.domain.annotations.Adapter
-import net.corda.tools.error.codes.server.domain.loggerFor
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.publisher.Mono.defer
@@ -36,29 +29,7 @@ internal class CachingErrorDescriptionService @Inject constructor(
     override fun descriptionLocationFor(errorCode: ErrorCode, releaseVersion: ReleaseVersion, platformEdition: PlatformEdition, invocationContext: InvocationContext): Mono<ErrorDescriptionLocation> {
 
         val coordinates = ErrorCoordinates(errorCode, releaseVersion, platformEdition)
-        return coordinates.let(retrieveCached)
-                .orIfAbsent { lookupClosestTo(coordinates, invocationContext).doOnNext { addToCache(coordinates, it) } }
-                .thenPublish(coordinates, invocationContext)
-                .orIfAbsent { coordinates.provideEnterpriseDefault() }
-                .orIfAbsent { coordinates.provideOSDefault() }
-    }
-
-    private fun ErrorCoordinates.provideEnterpriseDefault(): Mono<ErrorDescriptionLocation> {
-
-        return if (this.platformEdition == PlatformEdition.Enterprise) {
-            Mono.just(ErrorDescriptionLocation.External(URI("https://support.r3.com/")))
-        } else {
-            Mono.empty()
-        }
-    }
-
-    private fun ErrorCoordinates.provideOSDefault(): Mono<ErrorDescriptionLocation> {
-
-        return if (this.platformEdition == PlatformEdition.OpenSource) {
-            Mono.just(ErrorDescriptionLocation.External(URI("https://www.stackoverflow.com/search?q=[corda]+errorCode+${this.code.value}")))
-        } else {
-            Mono.empty()
-        }
+        return coordinates.let(retrieveCached).orIfAbsent { lookupClosestTo(coordinates, invocationContext).doOnNext { addToCache(coordinates, it) } }.thenPublish(coordinates, invocationContext).orIfAbsent(coordinates::bestEffortSearchLocation)
     }
 
     @PreDestroy
@@ -126,4 +97,12 @@ internal class CachingErrorDescriptionService @Inject constructor(
 internal class ErrorDescriptionLocator @Inject constructor(private val service: ErrorDescriptionService) : (ErrorCode, ReleaseVersion, PlatformEdition, InvocationContext) -> Mono<ErrorDescriptionLocation> {
 
     override fun invoke(errorCode: ErrorCode, releaseVersion: ReleaseVersion, platformEdition: PlatformEdition, invocationContext: InvocationContext) = service.descriptionLocationFor(errorCode, releaseVersion, platformEdition, invocationContext)
+}
+
+private fun ErrorCoordinates.bestEffortSearchLocation(): Mono<ErrorDescriptionLocation> {
+
+    return when (platformEdition) {
+        PlatformEdition.Enterprise -> Mono.just(ErrorDescriptionLocation.External(URI("https://support.r3.com/")))
+        PlatformEdition.OpenSource -> Mono.just(ErrorDescriptionLocation.External(URI("https://www.stackoverflow.com/search?q=[corda]+errorCode+${code.value}")))
+    }
 }

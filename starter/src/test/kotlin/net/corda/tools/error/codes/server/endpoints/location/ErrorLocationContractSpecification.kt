@@ -7,6 +7,7 @@ import io.vertx.core.buffer.Buffer
 import io.vertx.ext.web.client.HttpResponse
 import io.vertx.ext.web.client.WebClient
 import io.vertx.ext.web.client.WebClientOptions
+import net.corda.tools.error.codes.server.commons.domain.Port
 import net.corda.tools.error.codes.server.commons.vertx.web.test.asyncResponse
 import net.corda.tools.error.codes.server.domain.*
 import org.assertj.core.api.Assertions.assertThat
@@ -61,14 +62,14 @@ interface ErrorLocationContractSpecification {
         assertThat(response.headers()[HttpHeaderNames.LOCATION]).isEqualTo(expectedLocation.uri.toASCIIString())
     }
 
-    fun startWebServerWithStubbedRepository(errorCoordinatesForServer: ErrorCoordinates, descriptionsReturned: Flux<out ErrorDescription>): Int
+    fun startWebServerWithStubbedRepository(errorCoordinatesForServer: ErrorCoordinates, descriptionsReturned: Flux<out ErrorDescription>): Port
 
     private fun performRequestWithStubbedValue(errorCoordinatesForServer: ErrorCoordinates, descriptionsReturned: Flux<out ErrorDescription>): Mono<HttpResponse<Buffer>> {
 
         val webServerPort = startWebServerWithStubbedRepository(errorCoordinatesForServer, descriptionsReturned)
 
         val vertx = Vertx.vertx()
-        val client = webClient(webServerPort, vertx)
+        val client = webClient(webServerPort.value, vertx)
 
         return client.get(path(errorCoordinatesForServer)).followRedirects(false).asyncResponse().doAfterTerminate(client::close).doAfterTerminate(vertx::close)
     }

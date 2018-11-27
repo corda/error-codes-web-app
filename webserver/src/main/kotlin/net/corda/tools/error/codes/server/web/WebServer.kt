@@ -15,12 +15,15 @@ import net.corda.tools.error.codes.server.commons.lifecycle.WithLifeCycle
 import net.corda.tools.error.codes.server.commons.vertx.web.Endpoint
 import net.corda.tools.error.codes.server.domain.loggerFor
 import org.apache.commons.lang3.builder.ToStringBuilder
+import java.util.concurrent.CountDownLatch
 import javax.annotation.PostConstruct
 import javax.annotation.PreDestroy
 import javax.inject.Inject
 import javax.inject.Named
 
 interface WebServer : EventPublisher<WebServer.Event>, WithLifeCycle {
+
+    val actualPort: Port?
 
     val options: WebServer.Options
 
@@ -54,6 +57,8 @@ internal class VertxWebServer @Inject constructor(override val options: WebServe
         private val logger = loggerFor<VertxWebServer>()
     }
 
+    override var actualPort: Port? = null
+
     private val servers: Collection<HttpServer>
 
     init {
@@ -66,15 +71,28 @@ internal class VertxWebServer @Inject constructor(override val options: WebServe
     @PostConstruct
     override fun start() {
 
-        servers.forEach { it.listen() }
+        val latch = CountDownLatch(servers.size)
+        servers.forEach {
+            it.listen { result ->
+                if (result.succeeded()) {
+                    latch.countDown()
+                } else {
+                    throw result.cause()
+                }
+            }
+        }
+        latch.await()
         logger.info("Endpoints are:${System.lineSeparator()}${endpoints.asSequence().sortedBy(Endpoint::path).joinToString(System.lineSeparator(), transform = { "\t- ${it.description()}" })}")
-        source.publish(WebServer.Event.Initialisation.Completed(Port(servers.first().actualPort())))
+        actualPort = Port(servers.first().actualPort()).also {
+            source.publish(WebServer.Event.Initialisation.Completed(it))
+        }
     }
 
     @PreDestroy
     override fun close() {
 
         servers.forEach { it.close() }
+        actualPort = null
         source.close()
         logger.info("Closed")
     }

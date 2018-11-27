@@ -18,8 +18,6 @@ import org.springframework.context.annotation.FilterType
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import reactor.core.publisher.Flux
-import java.net.InetSocketAddress
-import java.net.ServerSocket
 import javax.inject.Inject
 
 @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
@@ -36,12 +34,12 @@ internal abstract class ErrorLocationContractTestTemplate : ErrorLocationContrac
         private var descriptions: Flux<out ErrorDescription>? = null
     }
 
-    override fun startWebServerWithStubbedRepository(errorCoordinatesForServer: ErrorCoordinates, descriptionsReturned: Flux<out ErrorDescription>): Int {
+    override fun startWebServerWithStubbedRepository(errorCoordinatesForServer: ErrorCoordinates, descriptionsReturned: Flux<out ErrorDescription>): Port {
 
         errorCoordinates = errorCoordinatesForServer
         descriptions = descriptionsReturned
 
-        return webServer.options.port.value
+        return webServer.actualPort!!
     }
 
     @TestBean
@@ -53,14 +51,9 @@ internal abstract class ErrorLocationContractTestTemplate : ErrorLocationContrac
         @Bean
         open fun webServerOptions(): WebServer.Options {
 
-            return ServerSocket().use {
+            return object : WebServer.Options {
 
-                it.reuseAddress = true
-                it.bind(InetSocketAddress(0))
-                object : WebServer.Options {
-
-                    override val port = Port(it.localPort)
-                }
+                override val port = Port(0)
             }
         }
 
